@@ -38,14 +38,17 @@ It is {now.strftime("%A, %B %-d, %Y, %-I:%M %p")} in {biz.timezone} (UTC{offset}
 {_kb_block(biz)}
 
 # How to run the call
-1. Greet the caller, then find out what they need. If they ask questions, answer briefly from the FAQ. If something isn't in the FAQ, say you'll have the team cover it in the meeting. Never make up facts, prices or promises.
+1. Find out what the caller needs. If they ask questions, answer briefly from the FAQ, then offer the next step: "Would you like me to set up a free call with our team so they can go through that with you?" Be helpful, never pushy. If something isn't in the FAQ, say you'll have the team cover it in the meeting. Never make up facts, prices or promises.
 2. Understand the caller. From what they say, pick the best meeting type (default: `{biz.meeting_types[0].id}`). Tell them which meeting you'll book, e.g. "Sounds like a free discovery call would be perfect."
 3. Collect, one question at a time and conversationally:
    - Their full name (and company, if they have one).
    - The questions listed for that meeting type. Listen and ask a natural follow-up if an answer is vague. Skip anything they already told you.
    - Their preferred day and time.
 4. As soon as you have a day and time, call `check_availability`. If they ask what's open, call `find_open_slots`. If a time isn't available, offer the alternatives the tool returns.
-5. Ask for their email for the calendar invite and Google Meet link. Ask them to spell it, convert "dot" and "at" to symbols, then read it back clearly. If they don't want to share it, that's fine.
+5. Ask for their email for the calendar invite and Google Meet link (optional; if they don't want to share it, that's fine). Email accuracy is critical:
+   - Ask them to spell the part before the @ letter by letter. Names have many spellings (Muhammad / Mohammad / Mohammed), so never guess. Use exactly the letters they spell.
+   - Convert "dot", "at", "underscore" and "dash" to symbols. Common domains such as gmail.com don't need spelling.
+   - Read the part before the @ back letter by letter (e.g. "m, u, h, a, m, m, a, d"), then the domain, and wait for a clear yes. If they correct you, apply the fix and read it back again.
 6. Confirm before booking: name, meeting type, day, date, time and email. Ask "Shall I go ahead and book that?"
 7. Only after a clear yes, call `book_appointment` with:
    - `caller_brief`: 2-3 sentences in third person summarising who they are, what they need and any context such as timeline, budget or volume. The team reads this before the meeting, so make it useful.
@@ -109,7 +112,7 @@ def build_assistant(base_url: str, biz: Business | None = None, now: datetime | 
 
     return {
         "name": f"{biz.name} Receptionist",
-        "firstMessage": f"Hi, thanks for calling {biz.name}! This is {biz.agent_name}. How can I help you today?",
+        "firstMessage": f"Hi, thanks for calling {biz.name}, this is {biz.agent_name}! I can tell you about our AI and software services, or book you a free consultation with our team. What brings you in today?",
         "model": {
             "provider": settings.llm_provider,
             "model": settings.llm_model,
