@@ -2,7 +2,7 @@
 
 A production-style AI receptionist that **answers phone and web calls, understands what the caller needs, answers questions from a knowledge base, and books a tailored meeting on Google Calendar** with an email invite and a Google Meet link.
 
-**Live demo:** `https://<your-app>.vercel.app` · **Call:** `+1 (346) 372-7358`
+**Live demo:** https://ai-voice-appointment-agent.vercel.app · **Call:** `+1 (346) 372-7358`
 
 ## Architecture
 
