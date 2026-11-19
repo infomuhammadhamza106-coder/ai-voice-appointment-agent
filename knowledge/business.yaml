@@ -1,0 +1,92 @@
+# ------------------------------------------------------------------
+#  Business knowledge base: the single source of truth for the agent.
+#  Edit this file to change what the agent knows, asks and books.
+#  No code changes needed: redeploy and the next call uses it.
+# ------------------------------------------------------------------
+
+business:
+  name: Nova Digital
+  agent_name: Sara
+  timezone: Asia/Karachi          # IANA timezone of the team calendar
+  calendar_id: primary
+  phone: ""                       # optional, shown on the test page
+  website: novadigital.example
+  open_hour: 9                    # first bookable hour (local)
+  close_hour: 18                  # meetings must END by this hour
+  working_days: [1, 2, 3, 4, 5]   # 1=Mon ... 7=Sun
+  min_notice_minutes: 60          # earliest a caller can book from "now"
+  about: >
+    Nova Digital is a software agency that builds AI voice agents, chatbots,
+    automation workflows, web apps and mobile apps for small and medium businesses.
+    The team of 12 engineers works with clients in Pakistan, the Gulf, the UK and the US.
+
+# Each meeting type: the agent picks one based on what the caller needs,
+# asks its qualifying questions, then books with a tailored title, length and agenda.
+meeting_types:
+  - id: discovery_call
+    name: Free Discovery Call
+    duration: 30
+    when_to_use: The caller has a new idea or project and wants to explore working with us. Default when unsure.
+    questions:
+      - What problem are you trying to solve, or what do you want to build?
+      - Do you have a rough timeline in mind?
+      - Do you have a budget range in mind? (optional, don't push)
+    agenda:
+      - Understand goals and current situation
+      - Walk through relevant past work
+      - Agree on next steps and a proposal timeline
+
+  - id: technical_consultation
+    name: Technical Consultation
+    duration: 45
+    when_to_use: The caller already has a product or system and needs expert advice on architecture, AI integration, scaling or a specific technical problem.
+    questions:
+      - What does your current tech stack or system look like?
+      - What specific technical challenge do you want to discuss?
+      - How many users or how much volume are we talking about?
+    agenda:
+      - Review current architecture
+      - Deep-dive on the specific challenge
+      - Recommendations and options with trade-offs
+
+  - id: ai_agent_demo
+    name: AI Voice Agent Demo
+    duration: 30
+    when_to_use: The caller wants to see a live demo of an AI voice or chat agent for their business.
+    questions:
+      - What industry is your business in?
+      - What calls or tasks would you like the AI agent to handle?
+      - Roughly how many calls or chats do you get per day?
+    agenda:
+      - Live demo tailored to the caller's industry
+      - Map the caller's call flows to agent capabilities
+      - Pricing and rollout plan
+
+  - id: project_kickoff
+    name: Project Kickoff
+    duration: 60
+    when_to_use: The caller is an existing or signed client starting a project.
+    questions:
+      - What is the project or company name?
+      - Who else from your team should attend?
+    agenda:
+      - Introductions and roles
+      - Scope, milestones and communication plan
+      - Access, credentials and first sprint plan
+
+# Facts the agent may share. It must not invent anything beyond this.
+faqs:
+  - q: What services do you offer?
+    a: AI voice agents, AI chatbots, workflow automation (n8n, Zapier, custom), web apps, mobile apps, and AI integration into existing products.
+  - q: How much does it cost?
+    a: AI voice agents start from 1,500 US dollars for setup plus usage-based monthly costs. Web apps typically start from 3,000 dollars. Exact pricing comes after a free discovery call.
+  - q: How long does a project take?
+    a: A voice agent usually goes live in 1 to 2 weeks. A typical web app MVP takes 4 to 8 weeks.
+  - q: Where are you located?
+    a: Our team is based in Lahore, Pakistan, and works remotely with clients worldwide. All meetings are on Google Meet.
+  - q: What are your working hours?
+    a: Monday to Friday, 9 AM to 6 PM Pakistan time.
+  - q: Do you offer support after launch?
+    a: Yes, monthly support and maintenance plans are available, starting at 200 dollars per month.
+  - q: Which languages can the voice agents speak?
+    a: English, Urdu, Arabic and many more, with natural-sounding voices.
