@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Voice Appointment Agent: Live Demo</title>
+<style>
+  :root { --bg:#0d1117; --card:#161b22; --line:#2a313c; --text:#e6edf3; --mute:#8b949e; --accent:#3fb68b; --danger:#e5534b; --warn:#d29922; }
+  * { box-sizing:border-box; }
+  body { margin:0; min-height:100vh; display:grid; place-items:center; background:var(--bg); color:var(--text);
+         font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; padding:24px; }
+  .card { width:100%; max-width:600px; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:28px; }
+  h1 { font-size:22px; margin:0 0 4px; }
+  .sub { color:var(--mute); margin:0 0 20px; font-size:14px; }
+  .orb { width:110px; height:110px; border-radius:50%; margin:4px auto 20px; background:radial-gradient(circle at 35% 35%, #5fd3a8, #1f7a5a);
+         transition:transform .08s linear, opacity .3s; opacity:.5; }
+  .orb.live { opacity:1; }
+  button { display:block; width:100%; padding:14px; border:0; border-radius:10px; font-size:16px; font-weight:600; cursor:pointer; background:var(--accent); color:#06140e; }
+  button.end { background:var(--danger); color:#fff; }
+  button:disabled { opacity:.5; cursor:wait; }
+  #status { text-align:center; color:var(--mute); font-size:14px; margin:12px 0 0; min-height:21px; }
+  #phone { text-align:center; font-size:14px; margin-top:10px; color:var(--mute); }
+  #phone a { color:var(--text); font-weight:600; text-decoration:none; }
+  #log { margin-top:20px; max-height:320px; overflow-y:auto; border-top:1px solid var(--line); padding-top:12px; font-size:14px; }
+  .m { margin:6px 0; } .m b { color:var(--mute); margin-right:6px; }
+  .m.assistant b { color:var(--accent); }
+  .m.tool { color:var(--mute); font-size:13px; }
+  .m.booked { color:var(--accent); font-weight:600; }
+  details { margin-top:18px; font-size:13px; color:var(--mute); }
+  summary { cursor:pointer; color:var(--text); }
+  ul { padding-left:18px; margin:8px 0; } li { margin:2px 0; }
+</style>
+</head>
+<body>
+<main class="card">
+  <h1 id="title">AI Voice Appointment Agent</h1>
+  <p class="sub">Talk to the receptionist: ask about services, describe what you need, and book a meeting that lands on Google Calendar in real time.</p>
+
+  <div class="orb" id="orb"></div>
+  <button id="btn" disabled>Loading…</button>
+  <div id="status"></div>
+  <div id="phone"></div>
+  <div id="log" hidden></div>
+
+  <details>
+    <summary>Things to try</summary>
+    <ul>
+      <li>"What services do you offer, and how much does a voice agent cost?"</li>
+      <li>"I run a dental clinic and want an AI to answer calls. Can I see a demo?"</li>
+      <li>"I need a technical consultation about scaling my app, next Tuesday at 3 PM."</li>
+      <li>Ask for a Sunday or 10 PM. It will suggest open times instead.</li>
+      <li>Spell your email to receive the real invite with a Google Meet link.</li>
+    </ul>
+  </details>
+</main>
+
+<script type="module">
+  import Vapi from "https://esm.sh/@vapi-ai/web@2";
+
+  const $ = id => document.getElementById(id);
+  const btn = $("btn"), statusEl = $("status"), orb = $("orb"), log = $("log");
+  let vapi, cfg, live = false;
+
+  const add = (cls, who, text) => {
+    log.hidden = false;
+    const d = document.createElement("div");
+    d.className = "m " + cls;
+    if (who) { const b = document.createElement("b"); b.textContent = who; d.append(b); }
+    d.append(document.createTextNode(text));
+    log.append(d); log.scrollTop = log.scrollHeight;
+  };
+
+  try {
+    cfg = await fetch("/api/assistant").then(r => r.json());
+    if (!cfg.publicKey) throw new Error("VAPI_PUBLIC_KEY is not set on the server.");
+    $("title").textContent = `${cfg.business}: AI Receptionist`;
+    if (cfg.phone) $("phone").innerHTML = `Or call: <a href="tel:${cfg.phone}">${cfg.phone}</a>`;
+    vapi = new Vapi(cfg.publicKey);
+    btn.disabled = false; btn.textContent = "Start call";
+    statusEl.textContent = "Allow microphone access when your browser asks.";
+  } catch (e) { btn.textContent = "Unavailable"; statusEl.textContent = e.message; }
+
+  btn.onclick = async () => {
+    if (live) { vapi.stop(); return; }
+    btn.disabled = true; statusEl.textContent = "Connecting…";
+    try {
+      const fresh = await fetch("/api/assistant").then(r => r.json()); // fresh date/time in the prompt
+      await vapi.start(fresh.assistant);
+    } catch (e) { statusEl.textContent = "Could not start: " + (e?.message || e); btn.disabled = false; }
+  };
+
+  const bind = () => {
+    vapi.on("call-start", () => { live = true; btn.disabled = false; btn.textContent = "End call"; btn.classList.add("end");
+                                   orb.classList.add("live"); statusEl.textContent = "Connected. Say hello!"; log.innerHTML = ""; });
+    vapi.on("call-end",   () => { live = false; btn.textContent = "Start call"; btn.classList.remove("end");
+                                   orb.classList.remove("live"); orb.style.transform = ""; statusEl.textContent = "Call ended."; });
+    vapi.on("speech-start", () => statusEl.textContent = "Agent is speaking…");
+    vapi.on("speech-end",   () => statusEl.textContent = "Listening…");
+    vapi.on("volume-level", v => orb.style.transform = `scale(${1 + Math.min(v, 1) * 0.35})`);
+    vapi.on("message", m => {
+      if (m.type === "transcript" && m.transcriptType === "final")
+        add(m.role, m.role === "assistant" ? "Agent" : "You", m.transcript);
+      if (m.type === "tool-calls")
+        (m.toolCallList || []).forEach(t => add("tool", "", `⚙ ${(t.function?.name || "").replaceAll("_", " ")}`));
+      if (m.type === "tool-calls-result" || m.type === "tool.completed") {
+        const r = m.toolCallResult?.result || m.result || "";
+        if (String(r).startsWith("BOOKED")) add("booked", "", "✅ " + r.replace(/^BOOKED:\s*/, ""));
+      }
+    });
+    vapi.on("error", e => { console.error(e); statusEl.textContent = "Error: " + (e?.error?.message || e?.errorMsg || e?.message || "see console");
+                            btn.disabled = false; });
+  };
+  if (vapi) bind();
+</script>
+</body>
+</html>
